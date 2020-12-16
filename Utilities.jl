@@ -88,3 +88,22 @@ function calc_f1_score(C::Matrix)
     end
     return recall, precis, f1
 end
+
+
+function get_methods_for(mod::Module, object::String)
+    mod_name = string(Module)
+    methods_list = Method[]
+    for name in names(mod)
+        for method in collect(methods(getproperty(mod, name)))
+            if method.module != mod
+                continue
+            end
+            sig = string(method.sig)
+            sig_parts = split(sig, ['{', '}', ','])
+            if object in sig_parts
+                push!(methods_list, method)
+            end
+        end
+    end
+    return methods_list
+end

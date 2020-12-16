@@ -10,6 +10,8 @@ Test code
 include("../TreeEnsemble.jl")
 using .TreeEnsemble
 
+using Plots
+
 #debugging -> direct imports, makes it easier to modify functions during testing
 ## produces slower cose the code
 # include("../Utilities.jl")
@@ -38,11 +40,12 @@ set_right_child!(tree, 2, 5)
 ## -------------- load data  -------------- ##
 
 path = "C:/Users/sinai/Documents/Projects/Julia projects/RandomForestClassifier-jl/tests/"
-#file_name = "tests/Iris_cleaned.csv"
+
+# file_name = "tests/Iris_cleaned.csv"
 # target = "Species"
 # max_features = 4
 # n_trees = 10
-# min_samples_leaf = 1
+# min_samples_leaf = 3
 
 file_name = "tests/UniversalBank_cleaned.csv"
 target = "Personal Loan"
@@ -78,8 +81,12 @@ end
 
 println()
 nleaves_ = nleaves(classifier)
+max_depths = [get_max_depth(tree) for tree in rfc.trees]
 @printf("nleaves range, average: %d-%d, %.2f\n",
         minimum(nleaves_),  maximum(nleaves_), mean(nleaves_))
+@printf("max depth range, average: %d-%d, %.2f\n",
+        minimum(max_depths),  maximum(max_depths), mean(max_depths))
+
 
 println()
 # confusion matrix
@@ -95,15 +102,36 @@ if size(C, 1) == 2
 end
 
 println()
-fi = classifier.feature_importances
-#print("perm_feature_importance time")
-#@time fi = perm_feature_importance(classifier, X_train, y_train, n_repeats=10, random_state=classifier.random_state)[:means]
-order = sortperm(fi, rev=true)
+fi1 = classifier.feature_importances
+print("perm_feature_importance time")
+@time fi_perm = perm_feature_importance(classifier, X_train, y_train, n_repeats=10, random_state=classifier.random_state)
+fi2 = fi_perm[:means]
+order = sortperm(fi2, rev=true)
 println("Feature importances")
-for col_val in zip(names(X_train)[order], fi[order])
+for col_val in zip(names(X_train)[order], fi1[order])
     col, val = col_val
     @printf("%-15s %.4f\n",col, val)
 end
 
-#println()
-#print_tree(rfc.trees[3])
+order = sortperm(fi2)
+fi2 ./= sum(fi2)
+
+width = 0.4
+yticks2 = (1+width/2):1:(length(fi2)+width/2)
+yticks  = (1-width/2):1:(length(fi2)-width/2)
+
+b1 = bar(yticks2, fi2[order], label="permutation", orientation = :horizontal, bar_width=width, yerr=fi_perm[:stds])
+bar!(yticks, fi1[order], label="impurity", orientation = :horizontal, bar_width=width)
+plot!(
+    yticks=(1:classifier.n_features, classifier.features[order]),
+    xlabel = "relative feature importance score",
+    ylabel = "feature",
+    title = "Feature importances",
+    label = "impurity", legend=(0.85, 0.8)
+    )
+
+display(b1)
+#savefig(b1, "UniversalBank_feature_importances_jl")
+
+# println()
+# print_tree(rfc.trees[1])

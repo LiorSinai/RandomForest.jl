@@ -108,6 +108,7 @@ function fit!(forest::RandomForestClassifier, X::DataFrame, Y::DataFrame)
     forest.n_features = size(X, 2)
     forest.n_classes = size(unique(Y), 1)
     forest.features = names(X)
+    forest.trees = []
 
     # create decision trees
     rng_states = typeof(forest.random_state)[]  # save the random states to regenerate the random indices for the oob_score

@@ -99,6 +99,7 @@ ylabel!(canvases[1], "frequency")
 ylabel!(canvases[mod+1], "frequency")
 p1 = plot(canvases..., layout=(2, mod), legend=false, link = :y, size=(1000, 550))
 plot!(canvases[1], legend=true)
+plot!(canvases[2], title="features")
 display(p1)
 savefig(p1, "UniversalBank_features_jl.png")
 

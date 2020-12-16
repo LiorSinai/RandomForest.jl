@@ -22,7 +22,7 @@ import Base: size
 include("Classifier.jl")
 include("Utilities.jl")
 
-gini_score(counts) = 1 - sum([c*c for c in counts])/(sum(counts) * sum(counts))
+gini_score(counts) = 1.0 - sum(counts .* counts)/(sum(counts) ^2)
 
 ## --------------------- Binary Tree --------------------- ##
 """
@@ -30,7 +30,7 @@ gini_score(counts) = 1 - sum([c*c for c in counts])/(sum(counts) * sum(counts))
 
 A binary tree implemented as 2 parallel arrays.
 
-Available methods are: `add_node!`, `set_left_child`, `set_right_child`, `get_children`, `is_leaf`, `size`, `nleaves`, `find_depths`
+Available methods are: `add_node!`, `set_left_child`, `set_right_child`, `get_children`, `is_leaf`, `size`, `nleaves`, `find_depths`, `get_max_depth`
 """
 mutable struct BinaryTree
     children_left::Vector{Int}
@@ -81,6 +81,20 @@ function find_depths(tree::BinaryTree)
     end
     return depths
 end
+
+"""
+    get_max_depth(tree::BinaryTree; node_id=0) => Int
+
+Calculate the maximum depth of the tree
+"""
+function get_max_depth(tree::BinaryTree; node_id=1)
+    if is_leaf(tree, node_id)
+        return 0
+    end
+    left, right = get_children(tree, node_id)
+    return max(get_max_depth(tree, node_id=left), get_max_depth(tree, node_id=right)) + 1
+end
+
 
 
 ## --------------------- Decision Tree Classifier --------------------- ##
@@ -181,8 +195,8 @@ function print_tree(tree::DecisionTreeClassifier)
     return
 end
 
-size(tree::DecisionTreeClassifier) = length(tree.children_left)
-
+size(tree::DecisionTreeClassifier) = size(tree.binarytree)
+get_max_depth(tree::DecisionTreeClassifier) = get_max_depth(tree.binarytree)
 
 ## --------------------- fitting --------------------- ##
 
@@ -226,7 +240,7 @@ function split_node!(tree::DecisionTreeClassifier, X::DataFrame, Y::DataFrame, d
     tree.num_nodes += 1
     node_id = tree.num_nodes
     set_defaults!(tree, Y)
-    if tree.impurities[node_id] == 0
+    if tree.impurities[node_id] == 0.0
         return # only one class in this node
     end
 
@@ -258,7 +272,7 @@ function split_node!(tree::DecisionTreeClassifier, X::DataFrame, Y::DataFrame, d
 end
 
 function find_better_split(feature_idx, X::DataFrame, Y::DataFrame, node_id::Int,
-                            best_score::AbstractFloat, tree::DecisionTreeClassifier)
+                           best_score::AbstractFloat, tree::DecisionTreeClassifier)
     x = X[:, feature_idx]
 
     n_samples = length(x)
@@ -267,13 +281,13 @@ function find_better_split(feature_idx, X::DataFrame, Y::DataFrame, node_id::Int
     x_sort, y_sort = x[order], Y[order, 1]
 
     rhs_count = count_classes(y_sort, tree.n_classes)
-    lhs_count = zeros(Int, tree.n_classes)
+    lhs_count = zeros(tree.n_classes)
 
     xi, yi = zero(x_sort[1]), zero(y_sort[1]) # declare variables used in the loop (for optimisation purposes)
     for i in 1:(n_samples-1)
         global xi = x_sort[i]
         global yi = y_sort[i]
-        lhs_count[yi] += 1; rhs_count[yi] -= 1
+        lhs_count[yi] += 1.0; rhs_count[yi] -= 1.0
         if (xi == x_sort[i+1]) || (sum(lhs_count) < tree.min_samples_leaf)
             continue
         end
