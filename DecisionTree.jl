@@ -19,9 +19,6 @@ using CSV, DataFrames
 using Printf
 import Base: size
 
-include("Classifier.jl")
-include("Utilities.jl")
-
 gini_score(counts) = 1.0 - sum(counts .* counts)/(sum(counts) ^2)
 
 ## --------------------- Binary Tree --------------------- ##

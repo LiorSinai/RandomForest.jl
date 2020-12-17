@@ -89,18 +89,24 @@ function calc_f1_score(C::Matrix)
     return recall, precis, f1
 end
 
+"""
+    get_methods_with(mod::Module, type::Type)
 
-function get_methods_for(mod::Module, object::String)
+Custom implementation of methodswith.
+Retrieves all methods which use this type.
+"""
+function get_methods_with(mod::Module, type::Type)
     mod_name = string(Module)
+    identifier = string(type)
     methods_list = Method[]
     for name in names(mod)
-        for method in collect(methods(getproperty(mod, name)))
+        for method in methods(getproperty(mod, name))
             if method.module != mod
                 continue
             end
             sig = string(method.sig)
             sig_parts = split(sig, ['{', '}', ','])
-            if object in sig_parts
+            if identifier in sig_parts
                 push!(methods_list, method)
             end
         end

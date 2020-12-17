@@ -7,51 +7,40 @@ Test code
 
 =#
 
+using Revise
 include("../TreeEnsemble.jl")
-using .TreeEnsemble
+
+if !isdefined(Main, :TreeEnsemble)
+    using .TreeEnsemble
+end
 
 using Plots
 
-#debugging -> direct imports, makes it easier to modify functions during testing
-## produces slower cose the code
-# include("../Utilities.jl")
-# include("../Classifier.jl")
-# include("../DecisionTree.jl")
-# include("../RandomForest.jl")
+# call during debugging:
+# Revise.track("Utilities.jl")
+# Revise.track("Classifier.jl")
+# Revise.track("DecisionTree.jl")
+# Revise.track("RandomForest.jl")
 
 using CSV, DataFrames
 using Printf
 using Statistics
 
-## ------------  test BinaryTree ------------ ##
-
-tree = BinaryTree()
-add_node!(tree)
-add_node!(tree)
-add_node!(tree)
-set_left_child!(tree, 1, 1)
-set_left_child!(tree, 2, 2)
-set_left_child!(tree, 3, 3)
-set_right_child!(tree, 1, 4)
-set_right_child!(tree, 2, 5)
-@assert tree.children_left == [1, 2, 3]
-@assert tree.children_right == [4, 5, -1]
-
 ## -------------- load data  -------------- ##
 
 path = "C:/Users/sinai/Documents/Projects/Julia projects/RandomForestClassifier-jl/tests/"
 
-# file_name = "tests/Iris_cleaned.csv"
-# target = "Species"
-# max_features = 4
-# n_trees = 10
-# min_samples_leaf = 3
-
-file_name = "tests/UniversalBank_cleaned.csv"
-target = "Personal Loan"
-max_features = 3
-n_trees = 20
+file_name = "tests/Iris_cleaned.csv"
+target = "Species"
+max_features = 4
+n_trees = 10
 min_samples_leaf = 3
+
+# file_name = "tests/UniversalBank_cleaned.csv"
+# target = "Personal Loan"
+# max_features = 3
+# n_trees = 20
+# min_samples_leaf = 3
 
 data = CSV.read(file_name, DataFrame)
 X = select(data, Not(target))
@@ -81,7 +70,11 @@ end
 
 println()
 nleaves_ = nleaves(classifier)
-max_depths = [get_max_depth(tree) for tree in rfc.trees]
+if hasproperty(classifier, :trees)
+    max_depths = [get_max_depth(tree) for tree in classifier.trees]
+else
+    max_depths = [get_max_depth(classifier)]
+end
 @printf("nleaves range, average: %d-%d, %.2f\n",
         minimum(nleaves_),  maximum(nleaves_), mean(nleaves_))
 @printf("max depth range, average: %d-%d, %.2f\n",

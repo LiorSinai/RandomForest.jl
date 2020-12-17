@@ -8,6 +8,7 @@ A custom random forest implementation. See also my Python based implementation a
 ## Type Tree
 
 `Any`
+
 \-  `AbstractClassifier`
 
 \-\- `RandomForestClassifier{T}`

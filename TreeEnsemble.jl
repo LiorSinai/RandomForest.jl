@@ -18,7 +18,7 @@ Sources
 module TreeEnsemble
 
 export  AbstractClassifier, predict, score, fit!, perm_feature_importance,
-        # binary tree
+        # Binary tree
         BinaryTree, add_node!, set_left_child!, set_right_child!, get_children,
         is_leaf, nleaves, find_depths, get_max_depth,
         # Decision Tree Classifier
@@ -27,8 +27,12 @@ export  AbstractClassifier, predict, score, fit!, perm_feature_importance,
         # Random Forest Classifier
         RandomForestClassifier,
         # utilities
-        check_random_state, split_data, confusion_matrix, calc_f1_score
+        check_random_state, split_data, confusion_matrix, calc_f1_score,
+        get_methods_with
 
+include("Utilities.jl")
+include("Classifier.jl")
+include("DecisionTree.jl")
 include("RandomForest.jl")
 
 end

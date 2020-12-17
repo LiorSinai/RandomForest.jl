@@ -9,13 +9,9 @@ Sources
 
 =#
 
-
 using Random
 using CSV, DataFrames, Printf
 
-include("DecisionTree.jl")
-#include("Utilities.jl")  # already in DecisionTree.jl
-#include("Classifier.jl") # already in DecisionTree.jl
 
 ## --------------------- Random Forest Classifier  --------------------- ##
 """
@@ -29,7 +25,6 @@ Available methods are:
 `feature_importance_impurity`, `perm_feature_importance`
 """
 mutable struct RandomForestClassifier{T}  <: AbstractClassifier
-    T::DataType #for the type of values in the DecisionTree.
     #internal variables
     n_features::Union{Int, Nothing}
     n_classes::Union{Int, Nothing}
@@ -55,7 +50,7 @@ mutable struct RandomForestClassifier{T}  <: AbstractClassifier
             random_state=Random.GLOBAL_RNG,
             bootstrap=true,
             oob_score=false
-        ) where T = new(T,
+        ) where T = new(
             nothing, nothing, [], [], nothing, n_trees,
             max_depth, max_features, min_samples_leaf, check_random_state(random_state), bootstrap, oob_score, nothing
             )
@@ -121,7 +116,7 @@ function fit!(forest::RandomForestClassifier, X::DataFrame, Y::DataFrame)
     forest.feature_importances = feature_importance_impurity(forest)
     if forest.oob_score
         if !forest.bootstrap
-            println("Warning: out-of-bag score will not be calculated because bootstrap=false")
+            printstyled("Warning: out-of-bag score will not be calculated because bootstrap=false\n", color=:yellow)
         else
             forest.oob_score_ = calculate_oob_score(forest, X, Y, rng_states)
         end
@@ -142,7 +137,8 @@ function create_tree(forest::RandomForestClassifier, X::DataFrame, Y::DataFrame)
         Y_ = copy(Y)
     end
 
-    new_tree = DecisionTreeClassifier{forest.T}(
+    T = typeof(forest).parameters[1] # use the same type T used for the forest
+    new_tree = DecisionTreeClassifier{T}(
             max_depth = forest.max_depth,
             max_features = forest.max_features,
             min_samples_leaf = forest.min_samples_leaf,
@@ -188,7 +184,7 @@ function predict_prob(forest::RandomForestClassifier, X::DataFrame)
     for tree in forest.trees
         probs .+= predict_prob(tree, X)
     end
-    return probs
+    return probs ./ forest.n_trees
 end
 
 function predict(forest::RandomForestClassifier, X::DataFrame)
