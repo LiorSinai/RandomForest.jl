@@ -5,8 +5,11 @@ Random Forests from scratch.
 Unit tests
 =#
 include("../TreeEnsemble.jl")
-#using .TreeEnsemble
+using .TreeEnsemble
 using Test
+
+using CSV, DataFrames
+using Random
 
 println("Julia version: ", VERSION)
 println("Running tests ...")
@@ -35,6 +38,10 @@ end
 path = "C:/Users/sinai/Documents/Projects/Julia projects/RandomForestClassifier-jl/tests/"
 file_name = "tests/Iris_cleaned.csv"
 target = "Species"
+
+data = CSV.read(file_name, DataFrame)
+X = select(data, Not(target))
+Y = select(data, target)
 
 max_features = 4
 min_samples_leaf = 3
